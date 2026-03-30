@@ -7,6 +7,7 @@ from daily_word_service.service import WordOfTheDayService
 
 
 router = APIRouter()
+GENERATION_UNAVAILABLE_DETAIL = "Article generation service is currently unavailable"
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -21,7 +22,10 @@ def read_word_of_the_day(
     try:
         return service.get_article()
     except InvalidOpenAICredentialsError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=GENERATION_UNAVAILABLE_DETAIL,
+        ) from exc
     except ServiceError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
 
@@ -33,6 +37,9 @@ def refresh_word_of_the_day(
     try:
         return service.refresh_article()
     except InvalidOpenAICredentialsError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=GENERATION_UNAVAILABLE_DETAIL,
+        ) from exc
     except ServiceError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc

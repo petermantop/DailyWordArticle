@@ -114,7 +114,7 @@ def test_word_of_the_day_returns_503_when_generation_fails():
     assert response.json()["detail"] == "generation failed"
 
 
-def test_word_of_the_day_returns_401_when_openai_credentials_are_invalid():
+def test_word_of_the_day_returns_generic_503_when_openai_credentials_are_invalid():
     class InvalidCredentialsGenerator:
         def generate_article(self, word: str, description: str) -> Article:
             raise InvalidOpenAICredentialsError(
@@ -132,8 +132,8 @@ def test_word_of_the_day_returns_401_when_openai_credentials_are_invalid():
 
     response = client.get("/word-of-the-day")
 
-    assert response.status_code == 401
-    assert response.json()["detail"] == "OpenAI authentication failed: invalid API key"
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Article generation service is currently unavailable"
 
 
 def test_word_of_the_day_returns_503_when_rss_fails():
