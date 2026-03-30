@@ -1,4 +1,11 @@
+from enum import StrEnum
+
 from pydantic import BaseModel, Field
+
+
+class HealthStatus(StrEnum):
+    OK = "ok"
+    DEGRADED = "degraded"
 
 
 class Article(BaseModel):
@@ -7,9 +14,8 @@ class Article(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    status: str
+    status: HealthStatus
     cache_ready: bool
     scheduler_enabled: bool
     last_refresh_at: str | None
     last_error: str | None
-

@@ -5,7 +5,7 @@ from daily_word_service.cache import ArticleCache
 from daily_word_service.exceptions import ArticleGenerationError, ServiceError
 from daily_word_service.genai import OpenAIArticleGenerator
 from daily_word_service.rss import WordsmithRssClient
-from daily_word_service.schemas import Article, HealthResponse
+from daily_word_service.schemas import Article, HealthResponse, HealthStatus
 
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,11 @@ class WordOfTheDayService:
 
     def health(self) -> HealthResponse:
         snapshot = self._cache.snapshot()
-        status = "ok" if snapshot.article is not None and snapshot.last_error is None else "degraded"
+        status = (
+            HealthStatus.OK
+            if snapshot.article is not None and snapshot.last_error is None
+            else HealthStatus.DEGRADED
+        )
         last_refresh_at = None
         if snapshot.last_refresh_at is not None:
             last_refresh_at = snapshot.last_refresh_at.astimezone(timezone.utc).isoformat()
@@ -68,4 +72,3 @@ class WordOfTheDayService:
             last_refresh_at=last_refresh_at,
             last_error=snapshot.last_error,
         )
-

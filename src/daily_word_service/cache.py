@@ -6,6 +6,8 @@ from cachetools import TTLCache
 
 from daily_word_service.schemas import Article
 
+ARTICLE_CACHE_KEY = "article"
+
 
 @dataclass
 class CacheSnapshot:
@@ -35,10 +37,10 @@ class InMemoryArticleCache:
         self._last_error: str | None = None
 
     def get_article(self) -> Article | None:
-        return self._cache.get("article")
+        return self._cache.get(ARTICLE_CACHE_KEY)
 
     def set_article(self, article: Article) -> None:
-        self._cache["article"] = article
+        self._cache[ARTICLE_CACHE_KEY] = article
         self._last_refresh_at = datetime.now(timezone.utc)
         self._last_error = None
 
@@ -47,8 +49,7 @@ class InMemoryArticleCache:
 
     def snapshot(self) -> CacheSnapshot:
         return CacheSnapshot(
-            article=self._cache.get("article"),
+            article=self._cache.get(ARTICLE_CACHE_KEY),
             last_refresh_at=self._last_refresh_at,
             last_error=self._last_error,
         )
-

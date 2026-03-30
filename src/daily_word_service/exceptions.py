@@ -9,3 +9,6 @@ class UpstreamFetchError(ServiceError):
 class ArticleGenerationError(ServiceError):
     """Raised when article generation fails."""
 
+
+class InvalidOpenAICredentialsError(ArticleGenerationError):
+    """Raised when the OpenAI API key is invalid."""

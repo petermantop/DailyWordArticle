@@ -2,9 +2,13 @@ from fastapi.testclient import TestClient
 
 from daily_word_service.cache import InMemoryArticleCache
 from daily_word_service.container import get_service
-from daily_word_service.exceptions import ArticleGenerationError, UpstreamFetchError
+from daily_word_service.exceptions import (
+    ArticleGenerationError,
+    InvalidOpenAICredentialsError,
+    UpstreamFetchError,
+)
 from daily_word_service.main import app
-from daily_word_service.schemas import Article
+from daily_word_service.schemas import Article, HealthStatus
 from daily_word_service.service import WordOfTheDayService
 
 
@@ -85,9 +89,9 @@ def test_health_endpoint_reports_cache_state():
     healthy = client.get("/health")
 
     assert degraded.status_code == 200
-    assert degraded.json()["status"] == "degraded"
+    assert degraded.json()["status"] == HealthStatus.DEGRADED
     assert healthy.json()["cache_ready"] is True
-    assert healthy.json()["status"] == "ok"
+    assert healthy.json()["status"] == HealthStatus.OK
 
 
 def test_word_of_the_day_returns_503_when_generation_fails():
@@ -108,6 +112,28 @@ def test_word_of_the_day_returns_503_when_generation_fails():
 
     assert response.status_code == 503
     assert response.json()["detail"] == "generation failed"
+
+
+def test_word_of_the_day_returns_401_when_openai_credentials_are_invalid():
+    class InvalidCredentialsGenerator:
+        def generate_article(self, word: str, description: str) -> Article:
+            raise InvalidOpenAICredentialsError(
+                "OpenAI authentication failed: invalid API key"
+            )
+
+    service = WordOfTheDayService(
+        rss_client=FakeRssClient(),
+        article_generator=InvalidCredentialsGenerator(),
+        cache=InMemoryArticleCache(ttl_seconds=60),
+        scheduler_enabled=False,
+    )
+    app.dependency_overrides[get_service] = lambda: service
+    client = TestClient(app)
+
+    response = client.get("/word-of-the-day")
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "OpenAI authentication failed: invalid API key"
 
 
 def test_word_of_the_day_returns_503_when_rss_fails():

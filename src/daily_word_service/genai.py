@@ -1,8 +1,11 @@
 import logging
 
-from openai import OpenAI
+from openai import AuthenticationError, OpenAI
 
-from daily_word_service.exceptions import ArticleGenerationError
+from daily_word_service.exceptions import (
+    ArticleGenerationError,
+    InvalidOpenAICredentialsError,
+)
 from daily_word_service.schemas import Article
 
 
@@ -36,6 +39,10 @@ class OpenAIArticleGenerator:
                 model=self._model,
                 input=prompt,
             )
+        except AuthenticationError as exc:
+            raise InvalidOpenAICredentialsError(
+                "OpenAI authentication failed: invalid API key"
+            ) from exc
         except Exception as exc:
             raise ArticleGenerationError(f"OpenAI request failed: {exc}") from exc
 
@@ -55,4 +62,3 @@ class OpenAIArticleGenerator:
             raise ArticleGenerationError("Model response was empty after parsing")
 
         return Article(header=header, body=body)
-

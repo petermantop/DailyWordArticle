@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from daily_word_service.container import get_service
-from daily_word_service.exceptions import ServiceError
+from daily_word_service.exceptions import InvalidOpenAICredentialsError, ServiceError
 from daily_word_service.schemas import Article, HealthResponse
 from daily_word_service.service import WordOfTheDayService
 
@@ -20,6 +20,8 @@ def read_word_of_the_day(
 ) -> Article:
     try:
         return service.get_article()
+    except InvalidOpenAICredentialsError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
     except ServiceError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
 
@@ -30,6 +32,7 @@ def refresh_word_of_the_day(
 ) -> Article:
     try:
         return service.refresh_article()
+    except InvalidOpenAICredentialsError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
     except ServiceError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
-

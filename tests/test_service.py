@@ -3,7 +3,7 @@ import pytest
 from daily_word_service.cache import InMemoryArticleCache
 from daily_word_service.exceptions import ArticleGenerationError
 from daily_word_service.genai import OpenAIArticleGenerator
-from daily_word_service.schemas import Article
+from daily_word_service.schemas import Article, HealthStatus
 from daily_word_service.service import WordOfTheDayService
 
 
@@ -67,7 +67,7 @@ def test_service_records_error_in_health_state():
         service.refresh_article()
 
     health = service.health()
-    assert health.status == "degraded"
+    assert health.status == HealthStatus.DEGRADED
     assert health.last_error == "generation failed"
 
 
@@ -86,7 +86,7 @@ def test_warm_up_does_not_raise_on_failure():
     service.warm_up()
 
     health = service.health()
-    assert health.status == "degraded"
+    assert health.status == HealthStatus.DEGRADED
     assert health.cache_ready is False
 
 
