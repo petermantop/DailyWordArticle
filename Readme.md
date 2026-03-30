@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-This project delivers a Python-based RESTful service that fetches the daily word from Wordsmith's RSS feed and uses OpenAI to generate a compact article that is ready for client applications. The service is intentionally small in product scope but structured like a production-ready backend so it can demonstrate clear modularity, testability, and upgrade paths.
+This project delivers a Python-based RESTful service that fetches the daily word from Wordsmith's RSS feed, uses OpenAI to generate a compact article, and caches that generated result so it can be served efficiently throughout the day. The service is intentionally small in product scope but structured like a production-ready backend so it can demonstrate clear modularity, testability, daily refresh behavior, and upgrade paths.
 
 ## Why This Project Fits The Challenge
 
