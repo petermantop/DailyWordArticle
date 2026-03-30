@@ -42,6 +42,15 @@ Example response:
 }
 ```
 
+## Swagger / OpenAPI Docs
+
+FastAPI exposes interactive API documentation automatically:
+
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+These pages let you inspect the endpoints, request and response models, and test the API directly from the browser.
+
 ## Local Run
 
 1. Configure environment variables in `.env`.
