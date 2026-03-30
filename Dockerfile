@@ -1,8 +1,9 @@
 # Base image
-FROM python:3.9-slim AS base
+FROM python:3.11-slim AS base
 
 # Set working directory
 WORKDIR /app
+ENV PYTHONPATH=/app/src
 
 # Install dependencies
 COPY requirements.txt requirements.txt
@@ -30,4 +31,4 @@ FROM base AS final
 EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "daily_word_service.main:app", "--host", "0.0.0.0", "--port", "8000"]

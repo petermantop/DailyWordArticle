@@ -1,108 +1,102 @@
-# Word of the Day Article API
+# Daily Word Service
 
-## Overview
+## Problem Statement
 
-The Word of the Day Article API is a FastAPI application that fetches the "Word of the Day" from Wordsmith's RSS feed and generates an article using OpenAI's GPT-3.5-turbo model. The application caches the article to reduce API calls and updates the cache daily at midnight.
+This project delivers a Python-based RESTful service that fetches the daily word from Wordsmith's RSS feed and uses OpenAI to generate a compact article that is ready for client applications. The service is intentionally small in product scope but structured like a production-ready backend so it can demonstrate clear modularity, testability, and upgrade paths.
 
-## Prerequisites
+## Why This Project Fits The Challenge
 
-- Docker
-- Docker Compose
+- Python REST API built with FastAPI
+- GenAI feature built around article generation
+- Package-based runtime under `src/daily_word_service`
+- Modular service boundaries for API, configuration, feed ingestion, generation, caching, and scheduling
+- Containerized execution and deterministic tests
 
-## Setup
+## Architecture Summary
 
-1. **Extract the provided ZIP archive.**
+The runtime package lives under `src/daily_word_service` and is split into focused modules:
 
-2. **Insert your OpenAI API key:**
-   
-   - Open the `.env` file in the project root.
-   - Insert your OpenAI API key into the `OPENAI_API_KEY` variable:
-     ```env
-     OPENAI_API_KEY=your_openai_api_key
-     WORDSMITH_RSS_FEED=https://wordsmith.org/awad/rss1.xml
-     CACHE_TTL=86400  # Cache Time-to-Live in seconds (24 hours)
-     ```
+- `main.py`: FastAPI app bootstrap and lifespan management
+- `api.py`: REST routes and HTTP error mapping
+- `settings.py`: typed environment-backed settings
+- `rss.py`: Wordsmith feed client
+- `genai.py`: OpenAI integration using the modern SDK
+- `cache.py`: cache abstraction with an in-memory implementation
+- `service.py`: orchestration layer for fetch, generation, cache, and health
+- `scheduler.py`: optional refresh scheduling
 
-3. **Build and run the Docker containers:**
+This separation keeps framework concerns away from the core orchestration logic and makes each dependency easy to replace or mock.
 
-    ```sh
-    docker-compose up --build
-    ```
+## API Endpoints
 
-    The API will be available at `http://localhost:8000/word-of-the-day`.
+- `GET /word-of-the-day`: returns the cached or freshly generated article
+- `POST /word-of-the-day/refresh`: forces a refresh and updates the cache
+- `GET /health`: reports readiness, cache state, scheduler state, and the last refresh error
+
+Example response:
+
+```json
+{
+  "header": "A daily word worth knowing today",
+  "body": "A concise definition with usage and an interesting detail."
+}
+```
+
+## Local Run
+
+1. Configure environment variables in `.env`.
+2. Install dependencies:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+3. Start the API:
+
+```bash
+PYTHONPATH=src uvicorn daily_word_service.main:app --host 0.0.0.0 --port 8000
+```
+
+## Docker Run
+
+```bash
+docker compose up --build
+```
+
+The API will be available at `http://localhost:8000/word-of-the-day`.
 
 ## Running Tests
 
-1. **Ensure you have Docker installed.**
+```bash
+python3 -m pytest
+```
 
-2. **Run the tests using Docker Compose:**
+Or with Docker:
 
-    ```sh
-    docker-compose run --rm tests
-    ```
+```bash
+docker compose run --rm tests
+```
 
-## Usage
+## Configuration
 
-- **Endpoint:** `/word-of-the-day`
-- **Method:** `GET`
-- **Response:**
+- `OPENAI_API_KEY`: API key for OpenAI
+- `OPENAI_MODEL`: model used for article generation, default `gpt-4o-mini`
+- `WORDSMITH_RSS_FEED`: RSS feed source
+- `CACHE_TTL`: cache time-to-live in seconds
+- `ENABLE_SCHEDULER`: enables the daily refresh scheduler
 
-    ```json
-    {
-        "header": "Word of the Day",
-        "body": "An explanation of the word of the day."
-    }
-    ```
+## Scalability And Quality Choices
 
-## Approach and Methods
+- The API layer is thin, and orchestration is isolated in a service class for maintainability.
+- The cache is hidden behind an interface so Redis or another distributed cache can replace it later without changing the API routes.
+- Startup is resilient: the service can boot even if RSS or OpenAI is temporarily unavailable.
+- Health reporting exposes degraded states instead of failing silently.
+- External dependencies are mocked in tests so the suite is stable and fast.
 
-### Fetching the Word of the Day
+## Future Improvements
 
-The `fetch_word_of_the_day` function fetches the "Word of the Day" and its description from the Wordsmith RSS feed.
-
-### Generating the Article
-
-The `generate_article` function uses OpenAI's GPT-3.5-turbo model to generate an article with a header around 50 characters and a body up to 300 characters. The prompt used ensures that the article does not include labels and that the body is relevant and complete.
-
-### Caching
-
-The application uses `cachetools.TTLCache` to cache the generated article for 24 hours. The cache is updated daily at midnight using APScheduler.
-
-### FastAPI Application
-
-The FastAPI application initializes the cache by generating the article on startup. It also includes an endpoint to retrieve the cached article.
-
-### Scheduler
-
-The APScheduler library is used to schedule the cache update at midnight every day.
-
-### Application Startup
-
-When the application starts, it performs the following steps:
-
-1. **Start Scheduler:** The scheduler is started to handle daily cache updates.
-2. **Generate Initial Article:** The application generates and caches the article immediately to ensure it's available from the first request.
-
-
-## Points for Improvement
-
-1. **Error Handling:** Enhance error handling in the API, especially for network issues and API rate limits.
-2. **Logging:** Implement logging for better debugging and monitoring.
-3. **Scalability:** Consider using a distributed caching mechanism like Redis for scalability.
-4. **Security:** Ensure the OpenAI API key is stored securely and not exposed in logs or error messages.
-5. **Testing:** Add more comprehensive tests, including integration tests.
-
-## Screenshots
-
-### Docker Build
-
-![Docker Build](./screenshots/docker.png)
-
-### API Response using Postman
-
-![API Response](./screenshots/postman.png)
-
-### Test Results
-
-![Test Results](./screenshots/test.png)
-
+- Replace the in-memory cache with Redis for multi-instance deployments.
+- Persist refresh history for traceability and analytics.
+- Add request correlation IDs and richer structured logging.
+- Add retry and circuit-breaker policies around upstream dependencies.
+- Introduce CI workflows and dependency pinning for tighter release control.

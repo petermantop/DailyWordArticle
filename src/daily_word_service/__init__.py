@@ -1,0 +1,2 @@
+"""Daily Word Service package."""
+
