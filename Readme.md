@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-This project delivers a Python-based RESTful service that fetches the daily word from Wordsmith's RSS feed, uses OpenAI to generate a compact article, and caches that generated result so it can be served efficiently throughout the day. The service keeps the product scope focused while using a modular backend structure that is easier to test, maintain, and extend.
+This project delivers a Python-based RESTful service that fetches the daily word from Wordsmith's RSS feed, uses OpenAI to generate a compact article, and caches that generated result so it can be served efficiently throughout the day. This caching choice is not only useful for performance, but also for cost efficiency, because it avoids repeated OpenAI requests for the same daily content. The service keeps the product scope focused while using a modular backend structure that is easier to test, maintain, and extend.
 
 ## Why This Project Fits The Challenge
 
@@ -43,6 +43,12 @@ Example response:
   "body": "A concise definition with usage and an interesting detail."
 }
 ```
+
+## Example Request
+
+Postman example:
+
+![Postman Example](./postman.png)
 
 ## Swagger / OpenAPI Docs
 
@@ -98,17 +104,15 @@ docker compose run --rm tests
 
 ## Scalability And Quality Choices
 
+- Caching the generated daily article reduces repeated OpenAI calls, which helps control usage and cost.
 - The API layer is thin, and orchestration is isolated in a service class for maintainability.
 - The cache is hidden behind an interface so Redis or another distributed cache can replace it later without changing the API routes.
-- Caching the generated daily article reduces repeated OpenAI calls, which helps control usage and cost.
 - Startup is resilient: the service can boot even if RSS or OpenAI is temporarily unavailable.
 - Health reporting exposes degraded states instead of failing silently.
 - External dependencies are mocked in tests so the suite is stable and fast.
 
 ## Future Improvements
-
+- In production, the API should typically include authentication and authorization for protected endpoints.
 - Replace the in-memory cache with Redis for multi-instance deployments.
 - Persist refresh history for traceability and analytics.
 - Add request correlation IDs and richer structured logging.
-- Add retry and circuit-breaker policies around upstream dependencies.
-- Introduce CI workflows and dependency pinning for tighter release control.
