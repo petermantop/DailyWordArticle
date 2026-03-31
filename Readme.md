@@ -33,6 +33,8 @@ This separation keeps framework concerns away from the core orchestration logic 
 - `POST /word-of-the-day/refresh`: forces a refresh and updates the cache
 - `GET /health`: reports readiness, cache state, scheduler state, and the last refresh error
 
+Note: in production, health endpoints are usually internal and should not be broadly exposed to end users.
+
 Example response:
 
 ```json
